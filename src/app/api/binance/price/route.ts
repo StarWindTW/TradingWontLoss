@@ -23,21 +23,44 @@ export async function GET(request: Request) {
 
     console.log('✅ Trading pair:', tradingPair);
 
-    // 獲取幣安 USDT-M 永續合約價格
-    const response = await fetch(
-      `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${tradingPair}`
-    );
+    // 嘗試多個 API 端點
+    const endpoints = [
+      `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${tradingPair}`,
+      `https://api.binance.us/api/v3/ticker/price?symbol=${tradingPair.replace('USDT', 'USD')}`, // Binance.US (現貨)
+      `https://data-api.binance.vision/api/v3/ticker/price?symbol=${tradingPair}` // Binance Vision (現貨)
+    ];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Binance API error:', errorText);
-      throw new Error(`Failed to fetch price: ${response.status}`);
+    let lastError;
+    let data;
+
+    for (const url of endpoints) {
+      try {
+        console.log('Trying Binance API URL:', url);
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          data = await response.json();
+          if (data && data.price) {
+            console.log('Successfully fetched price from:', url);
+            break;
+          }
+        } else {
+          const errorText = await response.text();
+          console.warn(`Failed to fetch from ${url}: ${response.status} ${errorText}`);
+          lastError = new Error(`Binance API returned ${response.status}: ${errorText}`);
+        }
+      } catch (e) {
+        console.warn(`Error fetching from ${url}:`, e);
+        lastError = e;
+      }
     }
 
-    const data = await response.json();
+    if (!data || !data.price) {
+      throw lastError || new Error('Failed to fetch price from all endpoints');
+    }
     
     return NextResponse.json({
-      symbol: data.symbol,
+      symbol: tradingPair, // Return original requested symbol
       price: parseFloat(data.price),
     });
   } catch (error) {

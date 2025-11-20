@@ -49,24 +49,42 @@ export async function GET(request: Request) {
 
   try {
     const binanceInterval = convertInterval(interval);
-    const binanceUrl = `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}`;
     
-    console.log('Binance API URL:', binanceUrl);
-    
-    // 獲取幣安 USDT-M 永續合約 K 線數據
-    const response = await fetch(binanceUrl);
+    // 嘗試多個 API 端點
+    const endpoints = [
+      `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}`,
+      `https://api.binance.us/api/v3/klines?symbol=${symbol.replace('USDT', 'USD')}&interval=${binanceInterval}&limit=${limit}`, // Binance.US (現貨)
+      `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}` // Binance Vision (現貨)
+    ];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Binance klines API error:', response.status, errorText);
-      throw new Error(`Binance API returned ${response.status}: ${errorText}`);
+    let lastError;
+    let data;
+
+    for (const url of endpoints) {
+      try {
+        console.log('Trying Binance API URL:', url);
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            console.log('Successfully fetched data from:', url);
+            break;
+          }
+        } else {
+          const errorText = await response.text();
+          console.warn(`Failed to fetch from ${url}: ${response.status} ${errorText}`);
+          lastError = new Error(`Binance API returned ${response.status}: ${errorText}`);
+        }
+      } catch (e) {
+        console.warn(`Error fetching from ${url}:`, e);
+        lastError = e;
+      }
     }
 
-    const data = await response.json();
-    
-    if (!Array.isArray(data) || data.length === 0) {
-      console.error('Invalid klines data:', data);
-      throw new Error('Invalid klines data from Binance');
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.error('All Binance endpoints failed');
+      throw lastError || new Error('Failed to fetch klines from all endpoints');
     }
 
     console.log(`Successfully fetched ${data.length} klines`);
