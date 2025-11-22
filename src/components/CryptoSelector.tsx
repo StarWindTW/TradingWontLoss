@@ -95,7 +95,7 @@ function CryptoPrice({ symbol }: { symbol: string }) {
     };
 
     return (
-        <Text fontSize="sm" fontWeight="medium" color="blue.600">
+        <Text fontWeight="medium" color="fg">
             ${formatPrice(price)}
         </Text>
     );
@@ -146,8 +146,34 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
         return () => clearTimeout(debounceTimer);
     }, [cryptoSearch]);
 
+    // 自動補全 selectedOption 的詳細資訊 (如 24h 漲跌幅)
+    useEffect(() => {
+        if (selectedOption && selectedOption.priceChangePercent === undefined) {
+            const fetchTickerInfo = async () => {
+                try {
+                    const query = selectedOption.symbol || 'BTC';
+                    const res = await fetch(`/api/binance/symbols?q=${encodeURIComponent(query)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const targetSlug = selectedOption.slug || selectedOption.value;
+                        const match = data.find((item: CryptoOption) => 
+                            item.slug === targetSlug || item.value === targetSlug
+                        );
+                        
+                        if (match) {
+                            setSelectedOption(prev => prev ? { ...prev, ...match } : match);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch ticker info:', e);
+                }
+            };
+            fetchTickerInfo();
+        }
+    }, [selectedOption, setSelectedOption]);
+
     return (
-        <HStack>
+        <HStack gap={3}>
             <Box width="100%" maxWidth="400px" position="relative">
                 <MenuRoot positioning={{ placement: "bottom-start", gutter: 8 }}>
                     <MenuTrigger asChild>
@@ -223,16 +249,16 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                     <MenuContent
                         maxWidth="600px"
                         rounded="2xl"
-                        boxShadow="0 10px 40px rgba(0, 0, 0, 0.15)"
+                        boxShadow="0 10px 40px rgba(0, 0, 0, 0)"
                         border="1px solid"
-                        borderColor="gray.200"
-                        bg="white"
+                        borderColor="border.emphasized"
+                        bg="bg.muted"
                         overflow="hidden"
                         zIndex={9999}
                         position="absolute"
                         p={0}
                     >
-                        <Box p={1.5} pb={1} bg="white" position="sticky" top={0} zIndex={1}>
+                        <Box p={1.5} pb={1} position="sticky" top={0} zIndex={1}>
                             <Box position="relative">
                                 <Box
                                     position="absolute"
@@ -251,10 +277,10 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                                     onChange={(e) => setCryptoSearch(e.target.value)}
                                     size="md"
                                     autoFocus
-                                    bgColor="gray.100"
+                                    bg="bg.emphasized"
                                     variant="subtle"
-                                    focusRingColor="gray.200"
-                                    focusRingWidth="1px"
+                                    focusRingColor="border.emphasized"
+                                    focusRingWidth="0"
                                     rounded="xl"
                                     paddingLeft="40px"
                                 />
@@ -264,23 +290,22 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                         <Box
                             px={4}
                             py={2}
-                            bg="white"
                             borderBottom="1px solid"
-                            borderColor="gray.200"
+                            borderColor="border.emphasized"
                             position="sticky"
                             top="20px"
                             zIndex={1}
                         >
                             <HStack width="100%" justify="space-between">
                                 <Box width="180px">
-                                    <Text fontSize="xs" fontWeight="bold" color="gray.600">幣種</Text>
+                                    <Text fontSize="xs" fontWeight="bold" color="fg.subtle">幣種</Text>
                                 </Box>
                                 <HStack>
                                     <Box width="120px" textAlign="right">
-                                        <Text fontSize="xs" fontWeight="bold" color="gray.600">最新價格</Text>
+                                        <Text fontSize="xs" fontWeight="bold" color="fg.subtle">最新價格</Text>
                                     </Box>
                                     <Box width="100px" textAlign="right">
-                                        <Text fontSize="xs" fontWeight="bold" color="gray.600">24h漲跌幅</Text>
+                                        <Text fontSize="xs" fontWeight="bold" color="fg.subtle">24h漲跌幅</Text>
                                     </Box>
                                 </HStack>
                             </HStack>
@@ -304,7 +329,8 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                                             setSelectedOption(option);
                                         }}
                                         cursor="pointer"
-                                        _hover={{ bg: 'blue.50' }}
+                                        _hover={{ bg: 'bg.panel' }}
+                                        // _hover={{ bg: 'blue.50' }}
                                         px={4}
                                         py={1.5}
                                     >
@@ -315,7 +341,7 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                                                     width="28px"
                                                     height="28px"
                                                     borderRadius="full"
-                                                    bg="gray.100"
+                                                    bg="bg.emphasized"
                                                     display="flex"
                                                     alignItems="center"
                                                     justifyContent="center"
@@ -371,15 +397,10 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
                                                 <Box width="100px" textAlign="right">
                                                     {option.priceChangePercent !== undefined && (
                                                         <HStack gap={1} justify="flex-end">
-                                                            <Box
-                                                                as={option.priceChangePercent >= 0 ? LuTrendingUp : LuTrendingDown}
-                                                                fontSize="sm"
-                                                                color={option.priceChangePercent >= 0 ? 'green.600' : 'red.600'}
-                                                            />
                                                             <Text
                                                                 fontSize="sm"
                                                                 fontWeight="semibold"
-                                                                color={option.priceChangePercent >= 0 ? 'green.600' : 'red.600'}
+                                                                color={option.priceChangePercent >= 0 ? 'green.500' : 'red.500'}
                                                             >
                                                                 {option.priceChangePercent >= 0 ? '+' : ''}{option.priceChangePercent.toFixed(2)}%
                                                             </Text>
@@ -397,24 +418,15 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
             </Box>
             {selectedOption && (
                 <Box>
-                    <HStack gap={2} align="center">
-                        <Text fontSize="lg" fontWeight="semibold" color="gray.700">
-                            當前價格:
-                        </Text>
+                    <HStack align="center">
                         <CryptoPrice symbol={selectedOption.value || selectedOption.slug || ''} />
                     </HStack>
                     {selectedOption.priceChangePercent !== undefined && (
-                        <HStack gap={1} mt={1}>
-                            <Text fontSize="sm" color="gray.600">24h漲跌:</Text>
-                            <Box
-                                as={selectedOption.priceChangePercent >= 0 ? LuTrendingUp : LuTrendingDown}
-                                fontSize="sm"
-                                color={selectedOption.priceChangePercent >= 0 ? 'green.600' : 'red.600'}
-                            />
+                        <HStack gap={1}>
                             <Text
                                 fontSize="sm"
                                 fontWeight="semibold"
-                                color={selectedOption.priceChangePercent >= 0 ? 'green.600' : 'red.600'}
+                                color={selectedOption.priceChangePercent >= 0 ? 'green.500' : 'red.500'}
                             >
                                 {selectedOption.priceChangePercent >= 0 ? '+' : ''}{selectedOption.priceChangePercent.toFixed(2)}%
                             </Text>

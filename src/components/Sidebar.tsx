@@ -30,15 +30,17 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
     <Box
       width="240px"
       height="100vh"
-      bg="gray.50"
+      bg="bg.panel"
       borderRight="1px solid"
-      borderColor="gray.200"
+      borderColor={{ base: "gray.200", _dark: "gray.800" }}
       position="fixed"
       left={0}
       top={0}
       p={4}
+      display="flex"
+      flexDirection="column"
     >
-      <VStack align="stretch" gap={2} mt={20}>
+      <VStack align="stretch" gap={2} mt={20} flex={1}>
         {menuItems.map((item) => {
           const isActive = currentPage ? currentPage === item.id : pathname === item.path;
           return (
@@ -48,9 +50,9 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
               p={3}
               borderRadius="lg"
               cursor="pointer"
-              bg={isActive ? 'blue.50' : 'transparent'}
-              color={isActive ? 'blue.600' : 'gray.700'}
-              _hover={{ bg: isActive ? 'blue.50' : 'gray.100' }}
+              bg={isActive ? { base: 'blue.50', _dark: 'blue.900/20' } : 'transparent'}
+              color={isActive ? { base: 'blue.600', _dark: 'blue.300' } : { base: 'gray.700', _dark: 'gray.200' }}
+              _hover={{ bg: isActive ? { base: 'blue.50', _dark: 'blue.900/20' } : { base: 'gray.100', _dark: 'gray.800' } }}
               transition="all 0.2s"
               onClick={() => handleNavigation(item)}
             >

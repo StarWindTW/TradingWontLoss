@@ -72,17 +72,29 @@ export default function ResizableSplit({ left, right }: ResizableSplitProps) {
       {/* Resizer Handle - Only visible on XL screens */}
       <Box
         display={{ base: 'none', xl: 'block' }}
-        width="4px"
+        width="12px"
         height="100%"
-        bg={isDragging ? 'blue.500' : 'gray.200'}
         cursor="col-resize"
         onMouseDown={handleMouseDown}
-        _hover={{ bg: 'blue.400' }}
-        transition="background 0.2s"
-        borderRadius="full"
-        mx="-2px"
+        mx="-6px"
         zIndex={10}
-      />
+        position="relative"
+        _hover={{
+          "& > div": {
+            width: "4px",
+            bg: "blue.400"
+          }
+        }}
+      >
+        <Box
+          width={isDragging ? "4px" : "2px"}
+          height="100%"
+          bg={isDragging ? "blue.500" : { base: "gray.200", _dark: "border.emphasized" }}
+          margin="0 auto"
+          borderRadius="full"
+          transition="all 0.2s"
+        />
+      </Box>
 
       {/* Right Pane */}
       <Box 

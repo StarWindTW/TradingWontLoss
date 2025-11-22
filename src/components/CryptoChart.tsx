@@ -3,6 +3,7 @@
 import { createChart, CandlestickSeries, ColorType, IChartApi, ISeriesApi, LineStyle } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import { Box, Spinner, Center } from '@chakra-ui/react';
+import { useColorMode } from './ui/color-mode';
 
 interface CryptoChartProps {
   containerHeight?: number | string;
@@ -23,6 +24,7 @@ export default function CryptoChart({
   takeProfit,
   stopLoss,
 }: CryptoChartProps) {
+  const { colorMode } = useColorMode();
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -114,19 +116,25 @@ export default function CryptoChart({
         if (!chartInstanceRef.current) {
           console.log('Creating chart with', chartData.length, 'data points');
 
+          const isDark = colorMode === 'dark';
+          const backgroundColor = isDark ? '#171923' : '#FFFFFF';
+          const textColor = isDark ? '#E2E8F0' : '#333333';
+          const gridColor = isDark ? '#2D3748' : '#E0E0E0';
+          const borderColor = isDark ? '#4A5568' : '#D1D1D1';
+
           const chartOptions = {
             width: chartContainerRef.current.clientWidth || containerWidth,
             height: chartContainerRef.current.clientHeight || (typeof containerHeight === 'number' ? containerHeight : 400),
             layout: {
-              textColor: '#333',
-              background: { type: ColorType.Solid, color: '#FFFFFF' }
+              textColor: textColor,
+              background: { type: ColorType.Solid, color: backgroundColor }
             },
             grid: {
-              vertLines: { color: '#E0E0E0' },
-              horzLines: { color: '#E0E0E0' },
+              vertLines: { color: gridColor },
+              horzLines: { color: gridColor },
             },
             timeScale: {
-              borderColor: '#D1D1D1',
+              borderColor: borderColor,
               timeVisible: true,
               secondsVisible: false,
             },
@@ -263,6 +271,31 @@ export default function CryptoChart({
       priceLinesRef.current.push(line);
     }
   }, [entryPrice, takeProfit, stopLoss]);
+
+  // Update chart theme when color mode changes
+  useEffect(() => {
+    if (!chartInstanceRef.current) return;
+
+    const isDark = colorMode === 'dark';
+    const backgroundColor = isDark ? '#171923' : '#FFFFFF';
+    const textColor = isDark ? '#E2E8F0' : '#333333';
+    const gridColor = isDark ? '#2D3748' : '#E0E0E0';
+    const borderColor = isDark ? '#4A5568' : '#D1D1D1';
+
+    chartInstanceRef.current.applyOptions({
+      layout: {
+        textColor: textColor,
+        background: { type: ColorType.Solid, color: backgroundColor }
+      },
+      grid: {
+        vertLines: { color: gridColor },
+        horzLines: { color: gridColor },
+      },
+      timeScale: {
+        borderColor: borderColor,
+      },
+    });
+  }, [colorMode]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: containerHeight }}>

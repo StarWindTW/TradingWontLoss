@@ -630,7 +630,7 @@ export default function ForumMessageForm({
     return (
         <Box
             width="100%"
-            maxWidth="600px"
+            // maxWidth="600px"
             margin="0 auto"
             padding={6}
         >

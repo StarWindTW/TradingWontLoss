@@ -11,6 +11,7 @@ import SignalHistory from '../components/SignalHistory';
 import CryptoSelector from '../components/CryptoSelector';
 import Sidebar from '../components/Sidebar';
 import ResizableSplit from '../components/ResizableSplit';
+import TestAnimation from '@/components/TestAnimation';
 
 interface SignalRecord {
   id: string;
@@ -122,12 +123,10 @@ export default function Home() {
       // 先從 Discord 刪除 (如果有 threadId)
       if (record.threadId && session?.accessToken) {
         try {
-          const botApiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || 'http://localhost:3001';
-          await fetch(`${botApiUrl}/api/delete-thread/${record.threadId}`, {
+          // 改為呼叫 Next.js API Route，由後端代理請求到 Bot API
+          // 這樣可以避免 Mixed Content (HTTPS 呼叫 HTTP) 和 CORS 問題
+          await fetch(`/api/discord/thread/${record.threadId}`, {
             method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${session.accessToken}`,
-            },
           });
           console.log('✅ Discord thread deleted');
         } catch (error) {
@@ -161,12 +160,12 @@ export default function Home() {
   };
 
   return (
-    <Box display="flex" height="100vh" overflow="hidden">
+    <Box display="flex" height="100vh" overflow="hidden" bg="dcms.bg" color={{ base: "gray.900", _dark: "gray.50" }}>
       {session && <Sidebar onNavigate={setCurrentPage} currentPage={currentPage} />}
       
       <Box flex={1} ml={session ? "240px" : 0} p={8} height="100%" display="flex" flexDirection="column">
         <VStack gap={8} align="stretch" height="100%">
-          <HStack justify="space-between" flexShrink={0}>
+          <HStack justify="space-between" flexShrink={0} position="relative">
             <Heading size="xl">
               DCMS
             </Heading>
@@ -178,6 +177,7 @@ export default function Home() {
               {/* 主頁 - 顯示圖表 */}
               {currentPage === 'home' && (
                 <Flex direction="column" flex={1} minHeight={0}>
+                  {/* <TestAnimation /> */}
                   <Box flexShrink={0}>
                     <CryptoSelector
                       selectedOption={selectedOption}
@@ -195,7 +195,7 @@ export default function Home() {
                               value={timeframe}
                               onValueChange={(e) => setTimeframe(e.value)}
                             >
-                              <SegmentGroup.Indicator rounded="full" backgroundColor="white" />
+                              <SegmentGroup.Indicator rounded="full" backgroundColor={{ base: "white", _dark: "gray.600" }} />
                               <SegmentGroup.Item value='15m'>
                                 <SegmentGroupItemText>15分鐘</SegmentGroupItemText>
                                 <SegmentGroup.ItemHiddenInput />
@@ -230,7 +230,6 @@ export default function Home() {
                       }
                       right={
                         <Box height="100%">
-                          <Heading size="md" mb={4}>發送交易訊號</Heading>
                           <ForumMessageForm
                             selectedOption={selectedOption}
                             setSelectedOption={setSelectedOption}
