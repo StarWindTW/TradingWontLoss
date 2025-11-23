@@ -29,18 +29,19 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
   return (
     <Box
       width="240px"
-      height="100vh"
       bg="bg.panel"
       borderRight="1px solid"
       borderColor={{ base: "gray.200", _dark: "gray.800" }}
       position="fixed"
       left={0}
-      top={0}
+      top="65px"
+      bottom={0}
       p={4}
+      zIndex={100}
       display="flex"
       flexDirection="column"
     >
-      <VStack align="stretch" gap={2} mt={20} flex={1}>
+      <VStack align="stretch" gap={2} flex={1}>
         {menuItems.map((item) => {
           const isActive = currentPage ? currentPage === item.id : pathname === item.path;
           return (

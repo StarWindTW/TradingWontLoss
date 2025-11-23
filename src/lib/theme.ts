@@ -16,8 +16,8 @@ const customThemeConfig = defineConfig({
                 dcms: {
                     bg: {
                         value: {
-                            _light: "white",
-                            _dark: "colors.gray.900",
+                            _light: "colors.gray.50",
+                            _dark: "black",
                         }
                     },
                     panel: {

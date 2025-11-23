@@ -47,8 +47,8 @@ export default function TestAnimation() {
         <Box
             ref={containerRef}
             position="absolute"
-            top={-2}
-            right={0}
+            top={2}
+            right={2}
             zIndex={1000}
         >
             <MotionBox

@@ -35,6 +35,8 @@ import { NativeSelectRoot, NativeSelectField } from '@/components/ui/native-sele
 import { toaster } from '@/components/ui/toaster';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
+import ServerSelector from './ServerSelector';
+import PositionSelector from './PositionSelector';
 
 interface CryptoOption {
     value: string;
@@ -638,20 +640,18 @@ export default function ForumMessageForm({
                 <Stack gap={6}>
                     <ChakraField.Root required>
                         <ChakraField.Label>選擇伺服器</ChakraField.Label>
-                        <NativeSelectRoot>
-                            <NativeSelectField
-                                name="serverId"
-                                value={formData.serverId}
-                                onChange={handleChange}
-                                placeholder="選擇伺服器"
-                            >
-                                {servers.map(server => (
-                                    <option key={server.id} value={server.id}>
-                                        {server.name}
-                                    </option>
-                                ))}
-                            </NativeSelectField>
-                        </NativeSelectRoot>
+                        <ServerSelector
+                            width="100%"
+                            servers={servers}
+                            selectedServerId={formData.serverId}
+                            onSelect={(serverId) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    serverId: serverId,
+                                    channelId: ''
+                                }));
+                            }}
+                        />
                     </ChakraField.Root>
 
                     {hasDefaultChannel && formData.channelId && (
@@ -676,32 +676,13 @@ export default function ForumMessageForm({
                             </Box>
                         </Box>
                     )}
-
-                    <RadioCard.Root
-                        orientation="horizontal"
-                        align="center"
-                        justify="center"
-                        value={formData.positionType}
-                        defaultValue="long"
-                    >
-                        <RadioCard.Label>倉位類型</RadioCard.Label>
-                        <HStack align="stretch">
-                            <RadioCard.Item value="long" onClick={() => setFormData({ ...formData, positionType: 'long' })}>
-                                <RadioCard.ItemHiddenInput />
-                                <RadioCard.ItemControl>
-                                    <Box as={LuTrendingUp} fontSize="2xl" color="fg.subtle" />
-                                    <RadioCard.ItemText ms="-4">做多</RadioCard.ItemText>
-                                </RadioCard.ItemControl>
-                            </RadioCard.Item>
-                            <RadioCard.Item value="short" onClick={() => setFormData({ ...formData, positionType: 'short' })}>
-                                <RadioCard.ItemHiddenInput />
-                                <RadioCard.ItemControl>
-                                    <Box as={LuTrendingDown} fontSize="2xl" color="fg.subtle" />
-                                    <RadioCard.ItemText ms="-4">做空</RadioCard.ItemText>
-                                </RadioCard.ItemControl>
-                            </RadioCard.Item>
-                        </HStack>
-                    </RadioCard.Root>
+                    <ChakraField.Root>
+                        <ChakraField.Label>倉位類型</ChakraField.Label>
+                        <PositionSelector
+                            value={formData.positionType}
+                            onChange={(value) => setFormData({ ...formData, positionType: value })}
+                        />
+                    </ChakraField.Root>
 
                     {/* <Cha  */}
 
