@@ -4,14 +4,14 @@ import "./globals.css";
 import { Providers } from './providers';
 import { Toaster } from "@/components/ui/toaster";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/ui/Navbar";
+import Navbar from "@/components/Navbar";
 import { Box } from "@chakra-ui/react/";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Discord Forum Bot",
-  description: "Discord Forum Bot Dashboard",
+  title: "TradingWontLoss",
+  description: "TradingWontLoss Dashboard",
 };
 
 export default function RootLayout({
