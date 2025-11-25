@@ -1,5 +1,6 @@
-# Discord Cyrpto Message Sender
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# [TradingWontLoss](https://www.tradingwontloss.com/)
+
+TradingWontLoss能夠讓使用者在自己的Discord伺服器上發送，自己的開單資訊與成績，並在上面進行修改。
 
 ## Getting Started
 

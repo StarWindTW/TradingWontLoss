@@ -6,6 +6,7 @@ import {
     Box,
     Button,
     Input,
+    Textarea,
     HStack,
     Stack,
     Spinner,
@@ -58,6 +59,7 @@ interface SignalRecord {
     entryPrice: string;
     takeProfit: string;
     stopLoss: string;
+    reason?: string;
     riskRewardRatio?: string;
     sender: string;
     serverId: string;
@@ -71,6 +73,7 @@ interface ForumMessageFormProps {
     onTradingLevelsChange?: (levels: { entryPrice?: number; takeProfit?: number; stopLoss?: number }) => void;
     onSignalSent?: (signal: SignalRecord) => void;
     onServerChange?: (serverId: string) => void;
+    getChartScreenshot?: () => Promise<Blob | null>;
 }
 
 interface Server {
@@ -93,6 +96,7 @@ interface FormData {
     entryPrice: string;
     takeProfit: string;
     stopLoss: string;
+    reason: string;
 }
 
 interface CoinItem {
@@ -166,6 +170,7 @@ export default function ForumMessageForm({
     onTradingLevelsChange,
     onSignalSent,
     onServerChange,
+    getChartScreenshot,
 }: ForumMessageFormProps) {
     const [formData, setFormData] = useState<FormData>({
         serverId: '',
@@ -174,6 +179,7 @@ export default function ForumMessageForm({
         entryPrice: '',
         takeProfit: '',
         stopLoss: '',
+        reason: '',
     });
     const [servers, setServers] = useState<Server[]>([]);
     const [isLoadingServers, setIsLoadingServers] = useState(true);
@@ -544,6 +550,15 @@ export default function ForumMessageForm({
                 timestamp: new Date().toISOString()
             };
 
+            // 如果有開倉原因，添加到 fields
+            if (formData.reason) {
+                embed.fields.push({
+                    name: '📝 開倉原因',
+                    value: formData.reason,
+                    inline: false
+                });
+            }
+
             // 如果有盈虧比，添加到 fields
             if (riskRewardRatio) {
                 embed.fields.push({
@@ -553,12 +568,30 @@ export default function ForumMessageForm({
                 });
             }
 
+            // 截圖
+            let imageBase64 = null;
+            if (getChartScreenshot) {
+                try {
+                    const blob = await getChartScreenshot();
+                    if (blob) {
+                        const reader = new FileReader();
+                        imageBase64 = await new Promise((resolve) => {
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to take screenshot:', e);
+                }
+            }
+
             const response = await axios.post(
                 '/api/send-forum-message',
                 {
                     channelId: formData.channelId,
                     title: autoTitle,
                     embed: embed,
+                    image: imageBase64,
                 }
             );
 
@@ -573,6 +606,7 @@ export default function ForumMessageForm({
                     entryPrice: formData.entryPrice,
                     takeProfit: formData.takeProfit,
                     stopLoss: formData.stopLoss,
+                    reason: formData.reason || undefined,
                     riskRewardRatio: riskRewardRatio || undefined,
                     sender: senderName,
                     serverId: formData.serverId,
@@ -594,6 +628,7 @@ export default function ForumMessageForm({
                 entryPrice: '',
                 takeProfit: '',
                 stopLoss: '',
+                reason: '',
             };
             setFormData(newFormData);
 
@@ -634,7 +669,6 @@ export default function ForumMessageForm({
             width="100%"
             // maxWidth="600px"
             margin="0 auto"
-            padding={6}
         >
             <form onSubmit={handleSubmit}>
                 <Stack gap={6}>
@@ -688,11 +722,18 @@ export default function ForumMessageForm({
 
                     <ChakraField.Root required>
                         <ChakraField.Label>開倉價格</ChakraField.Label>
-                        <Stack direction="row" gap={2}>
+                        <Stack direction="row" gap={0}>
                             <Input
                                 name="entryPrice"
-                                type="number"
+                                width="100%"
                                 step="any"
+                                roundedLeft="xl"
+                                roundedRight="none"
+                                border="1px solid"
+                                borderRight="none"
+                                borderColor="border.emphasized"
+                                bg="dcms.panel"
+                                focusRing="none"
                                 value={formData.entryPrice}
                                 onChange={handleChange}
                                 placeholder="例如：50000"
@@ -703,8 +744,10 @@ export default function ForumMessageForm({
                                 onClick={toggleAutoPrice}
                                 colorPalette={isAutoPrice ? 'green' : 'blue'}
                                 variant={isAutoPrice ? 'solid' : 'outline'}
-                                size="md"
                                 minWidth="100px"
+                                roundedLeft="none"
+                                roundedRight="xl"
+                                borderColor="border.emphasized"
                             >
                                 {isAutoPrice ? <LuRefreshCw className="animate-spin" /> : <LuDollarSign />}
                                 {isAutoPrice ? '跟價中' : '最優價'}
@@ -716,8 +759,12 @@ export default function ForumMessageForm({
                         <ChakraField.Label>止盈價格</ChakraField.Label>
                         <Input
                             name="takeProfit"
-                            type="number"
                             step="any"
+                            rounded="xl"
+                            border="1px solid"
+                            borderColor="border.emphasized"
+                            bg="dcms.panel"
+                            focusRing="none"
                             value={formData.takeProfit}
                             onChange={handleChange}
                             placeholder="例如：55000"
@@ -728,11 +775,34 @@ export default function ForumMessageForm({
                         <ChakraField.Label>止損價格</ChakraField.Label>
                         <Input
                             name="stopLoss"
-                            type="number"
                             step="any"
+                            rounded="xl"
+                            border="1px solid"
+                            borderColor="border.emphasized"
+                            bg="dcms.panel"
+                            focusRing="none"
                             value={formData.stopLoss}
                             onChange={handleChange}
                             placeholder="例如：48000"
+                        />
+                    </ChakraField.Root>
+
+                    <ChakraField.Root>
+                        <ChakraField.Label>
+                            開倉原因 <Text as="span" color="gray.500" fontSize="sm" fontWeight="normal">(選填)</Text>
+                        </ChakraField.Label>
+                        <Textarea
+                            name="reason"
+                            rounded="xl"
+                            border="1px solid"
+                            borderColor="border.emphasized"
+                            bg="dcms.panel"
+                            focusRing="none"
+                            value={formData.reason}
+                            onChange={handleChange}
+                            placeholder="例如：突破壓力位，回踩確認..."
+                            minHeight="100px"
+                            resize="vertical"
                         />
                     </ChakraField.Root>
 

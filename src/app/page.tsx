@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Heading, VStack, HStack, Button, ButtonGroup, SegmentGroup, SegmentGroupItemText, Flex } from '@chakra-ui/react';
 import AsyncSelect from 'react-select/async';
 import { useSession } from 'next-auth/react';
 import ForumMessageForm from '../components/ForumMessageForm';
 import AuthButton from '../components/AuthButton';
-import CryptoChart from '../components/CryptoChart';
+import CryptoChart, { CryptoChartRef } from '../components/CryptoChart';
 import CryptoSelector from '../components/CryptoSelector';
 import Sidebar from '../components/Sidebar';
 import ResizableSplit from '../components/ResizableSplit';
@@ -53,6 +53,14 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState<string>('home');
 
   const [selectedServerId, setSelectedServerId] = useState<string>('');
+  const chartRef = useRef<CryptoChartRef>(null);
+
+  const getChartScreenshot = async () => {
+    if (chartRef.current) {
+      return await chartRef.current.takeScreenshot();
+    }
+    return null;
+  };
 
   // Add new signal to history
   const addSignalToHistory = async (signal: SignalRecord) => {
@@ -89,7 +97,7 @@ export default function Home() {
   };
 
   return (
-    <Box display="flex" height="calc(100vh - 65px)" overflow="hidden" bg="dcms.bg" color={{ base: "gray.900", _dark: "gray.50" }}>
+    <Box display="flex" height="calc(100vh - 65px)" overflow="auto" bg="dcms.bg" color={{ base: "gray.900", _dark: "gray.50" }}>
       {/* {session && <Sidebar onNavigate={setCurrentPage} currentPage={currentPage} />} */}
 
       <Box flex={1} ml={session ? "240px" : 0} height="100%" display="flex" flexDirection="column">
@@ -146,6 +154,7 @@ export default function Home() {
 
                           <Box flex={1} minHeight={0}>
                             <CryptoChart
+                              ref={chartRef}
                               symbol={selectedOption?.slug || 'BTCUSDT'}
                               interval={timeframe}
                               containerHeight="100%"
@@ -165,6 +174,7 @@ export default function Home() {
                             onTradingLevelsChange={setTradingLevels}
                             onSignalSent={addSignalToHistory}
                             onServerChange={setSelectedServerId}
+                            getChartScreenshot={getChartScreenshot}
                           />
                         </Box>
                       }
@@ -172,14 +182,6 @@ export default function Home() {
                   </Box>
                 </Flex>
               )}
-
-              {/* 歷史紀錄頁面 */}
-              {/* {currentPage === 'history' && (
-                <Box flex={1} overflowY="auto">
-                  <Heading size="lg" mb={6}>歷史紀錄</Heading>
-                  <SignalHistory records={signalHistory} onDelete={deleteSignal} />
-                </Box>
-              )} */}
             </>
           )}
         </VStack>

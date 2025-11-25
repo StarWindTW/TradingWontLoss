@@ -21,9 +21,14 @@ export default function PositionSelector({ value, onChange }: PositionSelectorPr
             {/* Moving Background Pill */}
             <motion.div
                 layout
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                transition={{ 
+                    left: { type: "spring", stiffness: 500, damping: 30 },
+                    width: { duration: 0.3 },
+                    backgroundColor: { duration: 0.2 }
+                }}
                 animate={{
                     left: value === 'long' ? '4px' : '50%',
+                    width: ["calc(50% - 4px)", "calc(52% - 4px)", "calc(50% - 4px)"],
                     backgroundColor: value === 'long' ? 'var(--chakra-colors-green-500)' : 'var(--chakra-colors-red-500)'
                 }}
                 style={{

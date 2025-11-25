@@ -87,7 +87,7 @@ export default function ResizableSplit({ left, right }: ResizableSplitProps) {
         }}
       >
         <Box
-          width={isDragging ? "4px" : "2px"}
+          width={isDragging ? "4px" : "1px"}
           height="100%"
           bg={isDragging ? "blue.500" : { base: "gray.200", _dark: "border.emphasized" }}
           margin="0 auto"
