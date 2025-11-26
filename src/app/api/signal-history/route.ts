@@ -20,20 +20,19 @@ export async function GET(request: Request) {
     let query = supabase
       .from(TABLES.SIGNAL_HISTORY)
       .select('*')
-      .eq('user_id', session.user.id);
+      .eq('user_id', session.user.id)
+      .order('timestamp', { ascending: false })
+      .limit(limit);
 
     // 如果有指定 serverId，則只查詢該伺服器的記錄
     if (serverId) {
       query = query.eq('server_id', serverId);
     }
 
-    const { data, error } = await query
-      .order('timestamp', { ascending: false })
-      .limit(limit);
+    const { data, error } = await query;
 
     if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      throw error;
     }
 
     // 轉換 snake_case 到 camelCase
@@ -46,6 +45,7 @@ export async function GET(request: Request) {
       entryPrice: record.entry_price,
       takeProfit: record.take_profit,
       stopLoss: record.stop_loss,
+      reason: record.reason,
       riskRewardRatio: record.risk_reward_ratio,
       sender: record.sender,
       serverId: record.server_id,
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.log('📝 Attempting to save signal to Supabase:', body);
+    console.log('📝 Attempting to save signal to Database:', body);
 
     // 轉換 camelCase 到 snake_case
     const dbRecord = {
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       entry_price: body.entryPrice,
       take_profit: body.takeProfit,
       stop_loss: body.stopLoss,
+      reason: body.reason,
       risk_reward_ratio: body.riskRewardRatio,
       sender: body.sender,
       server_id: body.serverId,
@@ -99,31 +100,31 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from(TABLES.SIGNAL_HISTORY)
       .insert([dbRecord])
-      .select()
-      .single();
+      .select();
 
     if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('❌ Supabase insert error:', error);
+      throw error;
     }
 
     // 轉換回 camelCase 返回給前端
-    const result = {
-      id: data.id,
-      timestamp: data.timestamp,
-      coinSymbol: data.coin_symbol,
-      coinName: data.coin_name,
-      positionType: data.position_type,
-      entryPrice: data.entry_price,
-      takeProfit: data.take_profit,
-      stopLoss: data.stop_loss,
-      riskRewardRatio: data.risk_reward_ratio,
-      sender: data.sender,
-      serverId: data.server_id,
-      channelId: data.channel_id,
-      threadId: data.thread_id,
-      userId: data.user_id,
-    };
+    const result = (data || []).map(record => ({
+      id: record.id,
+      timestamp: record.timestamp,
+      coinSymbol: record.coin_symbol,
+      coinName: record.coin_name,
+      positionType: record.position_type,
+      entryPrice: record.entry_price,
+      takeProfit: record.take_profit,
+      stopLoss: record.stop_loss,
+      reason: record.reason,
+      riskRewardRatio: record.risk_reward_ratio,
+      sender: record.sender,
+      serverId: record.server_id,
+      channelId: record.channel_id,
+      threadId: record.thread_id,
+      userId: record.user_id,
+    }))[0];
 
     console.log('✅ Signal saved successfully:', result);
     return NextResponse.json(result);
@@ -158,8 +159,7 @@ export async function DELETE(request: Request) {
       .eq('user_id', session.user.id);
 
     if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      throw error;
     }
 
     return NextResponse.json({ success: true });

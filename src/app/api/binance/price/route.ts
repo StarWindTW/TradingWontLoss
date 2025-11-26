@@ -23,11 +23,9 @@ export async function GET(request: Request) {
 
     console.log('✅ Trading pair:', tradingPair);
 
-    // 嘗試多個 API 端點
+    // 僅使用合約 API，避免混合現貨數據
     const endpoints = [
       `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${tradingPair}`,
-      `https://api.binance.us/api/v3/ticker/price?symbol=${tradingPair.replace('USDT', 'USD')}`, // Binance.US (現貨)
-      `https://data-api.binance.vision/api/v3/ticker/price?symbol=${tradingPair}` // Binance Vision (現貨)
     ];
 
     let lastError;

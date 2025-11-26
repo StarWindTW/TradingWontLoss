@@ -22,6 +22,7 @@ interface SignalRecord {
   entryPrice: string;
   takeProfit: string;
   stopLoss: string;
+  reason?: string;
   riskRewardRatio?: string;
   sender: string;
   serverId: string;
@@ -69,6 +70,7 @@ export default function SignalHistory({ records, onDelete }: SignalHistoryProps)
                 <Table.ColumnHeader>開倉價</Table.ColumnHeader>
                 <Table.ColumnHeader>止盈</Table.ColumnHeader>
                 <Table.ColumnHeader>止損</Table.ColumnHeader>
+                <Table.ColumnHeader>原因</Table.ColumnHeader>
                 <Table.ColumnHeader>盈虧比</Table.ColumnHeader>
                 <Table.ColumnHeader>發送者</Table.ColumnHeader>
                 <Table.ColumnHeader>操作</Table.ColumnHeader>
@@ -102,6 +104,11 @@ export default function SignalHistory({ records, onDelete }: SignalHistoryProps)
                   </Table.Cell>
                   <Table.Cell fontFamily="mono" color="red.400">
                     {record.stopLoss}
+                  </Table.Cell>
+                  <Table.Cell maxWidth="200px">
+                    <Text truncate title={record.reason || ''}>
+                      {record.reason || '-'}
+                    </Text>
                   </Table.Cell>
                   <Table.Cell fontFamily="mono">
                     {record.riskRewardRatio ? `${record.riskRewardRatio}:1` : '-'}

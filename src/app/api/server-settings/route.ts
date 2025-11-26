@@ -21,9 +21,8 @@ export async function GET(request: Request) {
       .eq('server_id', serverId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error && error.code !== 'PGRST116') {
+       throw error;
     }
 
     if (!data) {
@@ -61,20 +60,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, error } = await supabase
-      .from(SETTINGS_TABLE)
-      .upsert({
+    const upsertData = {
         server_id: serverId,
         default_channel_id: channelId,
         updated_at: new Date().toISOString(),
-        updated_by: updatedBy,
-      })
+        updated_by: updatedBy
+    };
+
+    const { data, error } = await supabase
+      .from(SETTINGS_TABLE)
+      .upsert(upsertData, { onConflict: 'server_id' })
       .select()
       .single();
 
     if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+        throw error;
     }
 
     console.log('✅ Server settings saved successfully');

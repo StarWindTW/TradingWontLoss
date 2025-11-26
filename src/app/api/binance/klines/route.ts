@@ -50,11 +50,10 @@ export async function GET(request: Request) {
   try {
     const binanceInterval = convertInterval(interval);
     
-    // 嘗試多個 API 端點
+    // 僅使用合約 API，避免混合現貨數據導致圖表錯亂
+    // 注意：如果部署在美國地區的伺服器（如 Vercel 預設區域），可能會被幣安封鎖
     const endpoints = [
       `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}`,
-      `https://api.binance.us/api/v3/klines?symbol=${symbol.replace('USDT', 'USD')}&interval=${binanceInterval}&limit=${limit}`, // Binance.US (現貨)
-      `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}` // Binance Vision (現貨)
     ];
 
     let lastError;

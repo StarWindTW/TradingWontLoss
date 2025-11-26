@@ -17,6 +17,7 @@ export default function HistoryPage() {
         entryPrice: string;
         takeProfit: string;
         stopLoss: string;
+        reason?: string;
         riskRewardRatio?: string;
         sender: string;
         serverId: string;
@@ -97,7 +98,7 @@ export default function HistoryPage() {
     }
 
     return (
-        <Box ml="240px" flex={1} overflowY="auto" p={6} height="100%" bg="dcms.bg">
+        <Box ml="240px" flex={1} overflowY="auto" p={6} height="calc(100vh - 65px)" overflow="auto" bg="dcms.bg">
             <Heading size="lg" mb={6}>歷史紀錄</Heading>
             {isLoadingHistory ? (
                 <Center h="200px">

@@ -21,6 +21,7 @@ interface SignalRecord {
   entryPrice: string;
   takeProfit: string;
   stopLoss: string;
+  reason?: string;
   riskRewardRatio?: string;
   sender: string;
   serverId: string;
