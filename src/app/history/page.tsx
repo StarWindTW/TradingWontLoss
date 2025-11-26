@@ -97,7 +97,7 @@ export default function HistoryPage() {
     }
 
     return (
-        <Box ml="240px" flex={1} overflowY="auto" p={6} height="100%">
+        <Box ml="240px" flex={1} overflowY="auto" p={6} height="100%" bg="dcms.bg">
             <Heading size="lg" mb={6}>歷史紀錄</Heading>
             {isLoadingHistory ? (
                 <Center h="200px">

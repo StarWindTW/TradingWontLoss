@@ -38,31 +38,22 @@ interface CryptoSelectorProps {
 }
 
 // 加密貨幣價格組件
-function CryptoPrice({ symbol }: { symbol: string }) {
+function CryptoPrice({ symbol, realtime = false }: { symbol: string; realtime?: boolean }) {
     const [price, setPrice] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        console.log('CryptoPrice useEffect triggered with symbol:', JSON.stringify(symbol), 'Type:', typeof symbol);
+        if (!symbol || symbol.length === 0) return;
 
-        if (!symbol || symbol.length === 0) {
-            console.warn('⚠️ CryptoPrice: Empty symbol provided, skipping fetch');
-            return;
-        }
-
+        // Initial fetch
         const fetchPrice = async () => {
-            console.log('📞 CryptoPrice fetching price for:', symbol);
-            setIsLoading(true);
+            if (!price) setIsLoading(true);
             try {
                 const url = `/api/binance/price?symbol=${encodeURIComponent(symbol)}`;
-                console.log('📡 Request URL:', url);
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
-                    console.log('✅ Price fetched successfully for', symbol, ':', data.price);
                     setPrice(data.price);
-                } else {
-                    console.error(`❌ Failed to fetch price for ${symbol}:`, res.status);
                 }
             } catch (e) {
                 console.error(`❌ Exception fetching price for ${symbol}:`, e);
@@ -72,9 +63,33 @@ function CryptoPrice({ symbol }: { symbol: string }) {
         };
 
         fetchPrice();
-    }, [symbol]);
 
-    if (isLoading) {
+        // WebSocket for realtime updates
+        if (realtime) {
+            const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol.toLowerCase()}@aggTrade`);
+            
+            ws.onopen = () => {
+                // console.log(`🔌 Price WS Connected: ${symbol}`);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.p) {
+                        setPrice(parseFloat(data.p));
+                    }
+                } catch (err) {
+                    console.error('WS Message Error:', err);
+                }
+            };
+
+            return () => {
+                ws.close();
+            };
+        }
+    }, [symbol, realtime]);
+
+    if (isLoading && !price) {
         return <Spinner size="xs" />;
     }
 
@@ -83,14 +98,12 @@ function CryptoPrice({ symbol }: { symbol: string }) {
     }
 
     const formatPrice = (price: number) => {
-        if (price >= 1) {
+        if (price >= 100) {
             return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        } else if (price >= 0.01) {
-            return price.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-        } else if (price >= 0.0001) {
-            return price.toLocaleString('en-US', { minimumFractionDigits: 6, maximumFractionDigits: 6 });
+        } else if (price >= 1) {
+            return price.toLocaleString('en-US', { maximumFractionDigits: 4 });
         } else {
-            return price.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+            return price.toLocaleString('en-US', { maximumFractionDigits: 8 });
         }
     };
 
@@ -419,7 +432,7 @@ export default function CryptoSelector({ selectedOption, setSelectedOption }: Cr
             {selectedOption && (
                 <Box>
                     <HStack align="center">
-                        <CryptoPrice symbol={selectedOption.value || selectedOption.slug || ''} />
+                        <CryptoPrice symbol={selectedOption.value || selectedOption.slug || ''} realtime={true} />
                     </HStack>
                     {selectedOption.priceChangePercent !== undefined && (
                         <HStack gap={1}>

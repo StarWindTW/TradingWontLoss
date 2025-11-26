@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, VStack, Text, HStack, Icon } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
 import { LuSend, LuHistory, LuLayoutDashboard } from 'react-icons/lu';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -36,7 +37,7 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
       left={0}
       top="65px"
       bottom={0}
-      p={4}
+      p={3}
       zIndex={100}
       display="flex"
       flexDirection="column"
@@ -49,18 +50,40 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
               key={item.id}
               gap={3}
               p={3}
-              borderRadius="lg"
+              borderRadius="xl"
               cursor="pointer"
-              bg={isActive ? { base: 'blue.50', _dark: 'blue.900/20' } : 'transparent'}
+              position="relative"
               color={isActive ? { base: 'blue.600', _dark: 'blue.300' } : { base: 'gray.700', _dark: 'gray.200' }}
-              _hover={{ bg: isActive ? { base: 'blue.50', _dark: 'blue.900/20' } : { base: 'gray.100', _dark: 'gray.800' } }}
-              transition="all 0.2s"
+              _hover={{ bg: !isActive ? { base: 'gray.100', _dark: 'gray.800' } : undefined }}
               onClick={() => handleNavigation(item)}
             >
-              <Icon fontSize="20px">
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-active-bg"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 0,
+                    borderRadius: 'var(--chakra-radii-lg)',
+                  }}
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                >
+                  <Box
+                    width="100%"
+                    height="100%"
+                    bg={{ base: 'blue.50', _dark: 'blue.900' }}
+                    borderRadius="xl"
+                  />
+                </motion.div>
+              )}
+              <Icon fontSize="20px" position="relative" zIndex={1}>
                 <item.icon />
               </Icon>
-              <Text fontWeight={isActive ? 'semibold' : 'medium'}>
+              <Text fontWeight={isActive ? 'semibold' : 'medium'} position="relative" zIndex={1}>
                 {item.label}
               </Text>
             </HStack>

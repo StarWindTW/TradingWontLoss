@@ -295,7 +295,7 @@ const CryptoChart = forwardRef<CryptoChartRef, CryptoChartProps>(({
 
         // Fetch K線數據從幣安合約 API
         console.log(isUpdate ? 'Updating chart data...' : 'Fetching chart data for symbol:', symbol, 'interval:', interval);
-        const resp = await fetch(`/api/binance/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=500&_t=${Date.now()}`);
+        const resp = await fetch(`/api/binance/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=1500&_t=${Date.now()}`);
         console.log('API response status:', resp.status);
 
         if (!resp.ok) {
@@ -464,6 +464,19 @@ const CryptoChart = forwardRef<CryptoChartRef, CryptoChartProps>(({
             wickUpColor: '#089981',
             wickDownColor: '#F23645',
             lastValueVisible: true,
+            priceFormat: {
+              type: 'custom',
+              formatter: (price: number) => {
+                if (price >= 100) {
+                  return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                if (price >= 1) {
+                  return price.toLocaleString('en-US', { maximumFractionDigits: 4 });
+                }
+                return price.toLocaleString('en-US', { maximumFractionDigits: 8 });
+              },
+              minMove: 0.00000001,
+            },
           });
 
           ema50SeriesRef.current = chartInstanceRef.current.addSeries(LineSeries, {
