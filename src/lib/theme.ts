@@ -26,6 +26,18 @@ const customThemeConfig = defineConfig({
                             _dark: "colors.gray.800",
                         }
                     },
+                    panelbox: {
+                        value: {
+                            _light: "colors.gray.200",
+                            _dark: "colors.gray.950",
+                        }
+                    },
+                    btnHover: {
+                        value: {
+                            _light: "#F5F5F5",
+                            _dark: "#323236",
+                        }
+                    },
                 }
             }
         }

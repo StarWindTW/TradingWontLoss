@@ -3,6 +3,8 @@ import { supabase, TABLES } from '@/lib/supabase';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/options";
 
+export const dynamic = 'force-dynamic';
+
 // GET: 獲取歷史記錄
 export async function GET(request: Request) {
   try {

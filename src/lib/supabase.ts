@@ -10,4 +10,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 數據庫表名
 export const TABLES = {
   SIGNAL_HISTORY: 'signal_history',
+  // SIGNAL_LOGS: 'signal_logs', // Deprecated: logs are now stored in signal_history.logs JSONB column
 };
