@@ -1,1 +1,0 @@
-ALTER TABLE signal_history ADD COLUMN IF NOT EXISTS reason TEXT;
