@@ -44,7 +44,11 @@ export default function Sidebar({ onNavigate, currentPage }: SidebarProps) {
     >
       <VStack align="stretch" gap={2} flex={1}>
         {menuItems.map((item) => {
-          const isActive = currentPage ? currentPage === item.id : pathname === item.path;
+          const isActive = currentPage
+            ? currentPage === item.id
+            : item.path === '/history'
+              ? pathname.startsWith('/history')
+              : pathname === item.path;
           return (
             <HStack
               key={item.id}

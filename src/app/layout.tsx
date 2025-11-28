@@ -25,7 +25,9 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <Sidebar />
-          {children}
+          <div style={{ marginLeft: '240px' }}>
+            {children}
+          </div>
           <Toaster />
         </Providers>
       </body>

@@ -1,28 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    Box, 
-    Heading, 
-    Text, 
-    Input, 
-    Button, 
-    VStack, 
-    HStack, 
-    Badge, 
-    Table, 
-    Spinner, 
+import {
+    Box,
+    Heading,
+    Text,
+    Input,
+    Button,
+    VStack,
+    HStack,
+    Badge,
+    Table,
+    Spinner,
     Card,
     Stack,
     Separator,
     IconButton,
     Flex
 } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
 import { toaster } from '@/components/ui/toaster';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { LuArrowLeft, LuSave, LuHistory, LuTag, LuX, LuPlus, LuRefreshCw } from 'react-icons/lu';
 import axios from 'axios';
+import Head from 'next/head';
 
 interface SignalLog {
     id: string;
@@ -66,7 +68,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
     const [logs, setLogs] = useState<SignalLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const [editForm, setEditForm] = useState({
         takeProfit: '',
         stopLoss: ''
@@ -162,7 +164,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
     //         });
 
     //         const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
-            
+
     //         const response = await axios.patch(
     //             `${botAPiUrl}/api/update-thread-message/${signalData.threadId}`,
     //             { 
@@ -202,7 +204,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                     takeProfit: data.signal.takeProfit || '',
                     stopLoss: data.signal.stopLoss || ''
                 });
-                
+
                 // 如果有 threadId，從 Discord 讀取當前標籤
                 if (data.signal.threadId && session?.accessToken) {
                     try {
@@ -273,7 +275,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             if (!res.ok) throw new Error('Update failed');
 
             toaster.create({ title: '更新成功', type: 'success' });
-            
+
             // Refresh data
             const refreshRes = await fetch(`/api/signals/${params.id}`);
             const data = await refreshRes.json();
@@ -282,7 +284,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
 
             // 同步更新 Discord 消息
             // await updateDiscordMessage(data.signal);
-            
+
         } catch (error) {
             console.error(error);
             toaster.create({ title: '更新失敗', type: 'error' });
@@ -293,10 +295,10 @@ export default function SignalManagePage({ params }: { params: { id: string } })
 
     const handleToggleTag = async (tagId: string) => {
         if (!signal || !signal.threadId) {
-            toaster.create({ 
-                title: '無法更新', 
+            toaster.create({
+                title: '無法更新',
                 description: '此信號沒有關聯的 Discord 帖子',
-                type: 'error' 
+                type: 'error'
             });
             return;
         }
@@ -305,7 +307,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
         if (isUpdatingTags) return;
 
         let newSelectedTags: string[];
-        
+
         if (selectedForumTags.includes(tagId)) {
             // 移除標籤
             newSelectedTags = selectedForumTags.filter(id => id !== tagId);
@@ -325,15 +327,15 @@ export default function SignalManagePage({ params }: { params: { id: string } })
         // 立即更新 UI
         setSelectedForumTags(newSelectedTags);
         setIsUpdatingTags(true);
-        
+
         try {
 
             console.log('🏷️ Updating Discord tags:', newSelectedTags);
-            
+
             // 立即更新 Discord
             const response = await axios.patch(
                 `/api/discord/message/${signal.threadId}`,
-                { 
+                {
                     appliedTags: newSelectedTags
                 },
                 {
@@ -342,27 +344,27 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             );
 
             console.log('✅ Discord tags updated successfully:', response.data);
-            
-            toaster.create({ 
-                title: '標籤已更新', 
+
+            toaster.create({
+                title: '標籤已更新',
                 type: 'success',
                 duration: 1500
             });
-            
+
         } catch (error) {
             console.error('❌ Update Discord tags error:', error);
-            
+
             // 更新失敗，恢復原來的標籤
             setSelectedForumTags(selectedForumTags);
-            
-            const errorMessage = axios.isAxiosError(error) 
+
+            const errorMessage = axios.isAxiosError(error)
                 ? error.response?.data?.details || error.response?.data?.error || error.message
                 : '未知錯誤';
-            
-            toaster.create({ 
-                title: '更新標籤失敗', 
+
+            toaster.create({
+                title: '更新標籤失敗',
                 description: errorMessage,
-                type: 'error' 
+                type: 'error'
             });
         } finally {
             setIsUpdatingTags(false);
@@ -378,13 +380,15 @@ export default function SignalManagePage({ params }: { params: { id: string } })
     }
 
     if (!signal) return null;
-
     return (
-        <Box p={6} maxWidth="1200px" margin="0 auto">
-            <Button variant="ghost" mb={4} onClick={() => router.push('/history')}>
-                <LuArrowLeft /> 返回列表
-            </Button>
-
+        <Box
+            p={6}
+            maxWidth="1240px"
+            margin="0 auto"
+        >
+            <IconButton variant="ghost" rounded="full" mb={4} onClick={() => router.push('/history')}>
+                <LuArrowLeft />
+            </IconButton>
             <VStack gap={6} align="stretch">
                 <HStack justify="space-between" flexWrap="wrap" gap={4}>
                     <Heading size="xl">管理信號: {signal.coinSymbol}</Heading>
@@ -414,8 +418,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                         </Badge>
                     </HStack>
                 </HStack>
-
-                <HStack gap={6} align="start" wrap="wrap">
+                <HStack gap={2} align="start" wrap="wrap">
                     {/* 左側：編輯表單 */}
                     <Box flex={1} minW="300px">
                         <Card.Root>
@@ -428,82 +431,27 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                                         <Text color="gray.500" fontSize="sm">開倉價格</Text>
                                         <Text fontSize="xl" fontWeight="bold">{signal.entryPrice}</Text>
                                     </Box>
-                                    
                                     <Box>
                                         <Text color="gray.500" fontSize="sm" mb={1}>止盈價格</Text>
-                                        <Input 
+                                        <Input
                                             value={editForm.takeProfit}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, takeProfit: e.target.value }))}
                                         />
                                     </Box>
-
                                     <Box>
                                         <Text color="gray.500" fontSize="sm" mb={1}>止損價格</Text>
-                                        <Input 
+                                        <Input
                                             value={editForm.stopLoss}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, stopLoss: e.target.value }))}
                                         />
                                     </Box>
-
                                     <Box>
                                         <Text color="gray.500" fontSize="sm">開倉原因</Text>
                                         <Text>{signal.reason || '無'}</Text>
                                     </Box>
-
-                                    <Separator />
-
-                                    {/* Discord 論壇標籤 */}
-                                    {availableForumTags.length > 0 && (
-                                        <Box>
-                                            <HStack mb={2}>
-                                                <LuTag />
-                                                <Text color="gray.500" fontSize="sm" fontWeight="bold">論壇標籤</Text>
-                                                <Text fontSize="xs" color="gray.400">(點擊即時更新，最多5個)</Text>
-                                            </HStack>
-                                            
-                                            <Flex gap={2} wrap="wrap">
-                                                {availableForumTags.map((tag) => {
-                                                    const isSelected = selectedForumTags.includes(tag.id);
-                                                    return (
-                                                        <Badge 
-                                                            key={tag.id}
-                                                            colorPalette={isSelected ? 'blue' : 'gray'}
-                                                            cursor={isUpdatingTags ? 'wait' : 'pointer'}
-                                                            onClick={() => handleToggleTag(tag.id)}
-                                                            display="flex"
-                                                            alignItems="center"
-                                                            gap={1}
-                                                            px={3}
-                                                            py={1}
-                                                            fontSize="sm"
-                                                            borderWidth={isSelected ? '2px' : '1px'}
-                                                            borderColor={isSelected ? 'blue.500' : 'border.emphasized'}
-                                                            opacity={isUpdatingTags ? 0.6 : 1}
-                                                            _hover={{ 
-                                                                bg: isSelected ? 'blue.100' : 'gray.100',
-                                                                transform: isUpdatingTags ? 'none' : 'scale(1.05)',
-                                                                transition: 'all 0.2s'
-                                                            }}
-                                                        >
-                                                            {tag.emoji && tag.emoji.name && `${tag.emoji.name} `}
-                                                            {tag.name}
-                                                        </Badge>
-                                                    );
-                                                })}
-                                            </Flex>
-                                            
-                                            {isUpdatingTags && (
-                                                <HStack mt={2} fontSize="xs" color="gray.500">
-                                                    <Spinner size="xs" />
-                                                    <Text>更新中...</Text>
-                                                </HStack>
-                                            )}
-                                        </Box>
-                                    )}
-
-                                    <Button 
-                                        colorPalette="blue" 
-                                        onClick={handleSave} 
+                                    <Button
+                                        colorPalette="blue"
+                                        onClick={handleSave}
                                         loading={isSaving}
                                         mt={4}
                                     >
@@ -513,9 +461,58 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                             </Card.Body>
                         </Card.Root>
                     </Box>
-
                     {/* 右側：變更歷史 */}
                     <Box flex={1} minW="300px">
+                        <Card.Root mb={2}>
+                            <Card.Header>
+                                <HStack>
+                                    <LuTag />
+                                    <Heading size="md">論壇標籤</Heading>
+                                </HStack>
+                            </Card.Header>
+                            <Card.Body>
+                                {availableForumTags.length === 0 ? (
+                                    <Text color="gray.500">此頻道無可用標籤</Text>
+                                ) : (
+                                    <Flex gap={2} wrap="wrap">
+                                        {availableForumTags.map(tag => {
+                                            const isSelected = selectedForumTags.includes(tag.id);
+                                            return (
+                                                <Badge
+                                                    key={tag.id}
+                                                    colorPalette={isSelected ? 'blue' : 'gray'}
+                                                    cursor={isUpdatingTags ? 'wait' : 'pointer'}
+                                                    onClick={() => handleToggleTag(tag.id)}
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={1}
+                                                    px={3}
+                                                    py={1}
+                                                    fontSize="sm"
+                                                    borderWidth={isSelected ? '2px' : '1px'}
+                                                    borderColor={isSelected ? 'blue.500' : 'border.emphasized'}
+                                                    opacity={isUpdatingTags ? 0.6 : 1}
+                                                    _hover={{
+                                                        bg: isSelected ? 'blue.100' : 'gray.100',
+                                                        transform: isUpdatingTags ? 'none' : 'scale(1.05)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {tag.emoji && tag.emoji.name && `${tag.emoji.name} `}
+                                                    {tag.name}
+                                                </Badge>
+                                            );
+                                        })}
+                                    </Flex>
+                                )}
+                                {isUpdatingTags && (
+                                    <HStack mt={2} fontSize="xs" color="gray.500">
+                                        <Spinner size="xs" />
+                                        <Text>更新中...</Text>
+                                    </HStack>
+                                )}
+                            </Card.Body>
+                        </Card.Root>
                         <Card.Root>
                             <Card.Header>
                                 <HStack>
@@ -536,15 +533,15 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                                                 <Stack gap={1}>
                                                     {log.oldTakeProfit !== log.newTakeProfit && (
                                                         <Text fontSize="sm">
-                                                            止盈: <Text as="span" color="red.400" textDecoration="line-through">{log.oldTakeProfit}</Text> 
-                                                            {' -> '} 
+                                                            止盈: <Text as="span" color="red.400" textDecoration="line-through">{log.oldTakeProfit}</Text>
+                                                            {' -> '}
                                                             <Text as="span" color="green.500" fontWeight="bold">{log.newTakeProfit}</Text>
                                                         </Text>
                                                     )}
                                                     {log.oldStopLoss !== log.newStopLoss && (
                                                         <Text fontSize="sm">
-                                                            止損: <Text as="span" color="red.400" textDecoration="line-through">{log.oldStopLoss}</Text> 
-                                                            {' -> '} 
+                                                            止損: <Text as="span" color="red.400" textDecoration="line-through">{log.oldStopLoss}</Text>
+                                                            {' -> '}
                                                             <Text as="span" color="green.500" fontWeight="bold">{log.newStopLoss}</Text>
                                                         </Text>
                                                     )}

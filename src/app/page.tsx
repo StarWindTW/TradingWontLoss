@@ -101,7 +101,7 @@ export default function Home() {
     <Box display="flex" height="calc(100vh - 65px)" overflow="auto" bg="dcms.bg" color={{ base: "gray.900", _dark: "gray.50" }}>
       {/* {session && <Sidebar onNavigate={setCurrentPage} currentPage={currentPage} />} */}
 
-      <Box flex={1} ml={session ? "240px" : 0} height="100%" display="flex" flexDirection="column">
+      <Box flex={1} height="100%" display="flex" flexDirection="column">
         <VStack gap={0} align="stretch" height="100%">
           {/* <HStack justify="space-between" bg="bg.panel" p={4} borderBottom="1px solid" borderColor={{ base: "gray.200", _dark: "gray.800" }} flexShrink={0} position="relative">
             <Heading size="xl">
