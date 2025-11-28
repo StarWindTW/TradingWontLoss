@@ -18,6 +18,9 @@ import {
     MenuTrigger,
     MenuContent,
     MenuItem,
+    Badge,
+    Flex,
+    IconButton,
 } from '@chakra-ui/react';
 import {
     LuTrendingUp,
@@ -25,7 +28,10 @@ import {
     LuRefreshCw,
     LuDollarSign,
     LuChevronDown,
-    LuSearch
+    LuSearch,
+    LuTag,
+    LuX,
+    LuPlus
 } from 'react-icons/lu';
 import {
     FaCheckCircle,
@@ -87,6 +93,13 @@ interface Channel {
     name: string;
     type: number;
     parent: string | null;
+}
+
+interface ForumTag {
+    id: string;
+    name: string;
+    moderated: boolean;
+    emoji: any;
 }
 
 interface FormData {
@@ -191,9 +204,39 @@ export default function ForumMessageForm({
     const [cryptoOptions, setCryptoOptions] = useState<CryptoOption[]>([]);
     const [isLoadingCrypto, setIsLoadingCrypto] = useState(false);
     const previousServerIdRef = useRef<string>('');
+    const [availableForumTags, setAvailableForumTags] = useState<ForumTag[]>([]);
+    const [selectedForumTags, setSelectedForumTags] = useState<string[]>([]);
 
     const { data: session } = useSession();
     // coins are provided via props (fetched in parent)
+
+    // 載入論壇標籤
+    useEffect(() => {
+        const fetchForumTags = async () => {
+            if (!formData.channelId || !session?.accessToken) {
+                setAvailableForumTags([]);
+                return;
+            }
+
+            try {
+                const response = await axios.get(
+                    `http://localhost:3001/api/channels/${formData.channelId}/tags`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.accessToken}`
+                        }
+                    }
+                );
+                setAvailableForumTags(response.data);
+                console.log('Available forum tags:', response.data);
+            } catch (error) {
+                console.error('Failed to fetch forum tags:', error);
+                setAvailableForumTags([]);
+            }
+        };
+
+        fetchForumTags();
+    }, [formData.channelId, session?.accessToken]);
 
     // 載入伺服器列表
     useEffect(() => {
@@ -592,6 +635,7 @@ export default function ForumMessageForm({
                     title: autoTitle,
                     embed: embed,
                     image: imageBase64,
+                    appliedTags: selectedForumTags, // 添加論壇標籤
                 }
             );
 
@@ -631,6 +675,7 @@ export default function ForumMessageForm({
                 reason: '',
             };
             setFormData(newFormData);
+            setSelectedForumTags([]); // 清空論壇標籤選擇
 
             // 清除圖表上的價格線
             if (onTradingLevelsChange) {
@@ -805,6 +850,62 @@ export default function ForumMessageForm({
                             resize="vertical"
                         />
                     </ChakraField.Root>
+
+                    {/* Discord 論壇標籤 */}
+                    {availableForumTags.length > 0 && (
+                        <ChakraField.Root>
+                            <ChakraField.Label>
+                                <HStack gap={1}>
+                                    <LuTag />
+                                    <Text>論壇標籤</Text>
+                                    <Text as="span" color="gray.500" fontSize="sm" fontWeight="normal">(選填，最多5個)</Text>
+                                </HStack>
+                            </ChakraField.Label>
+                            
+                            <Flex gap={2} wrap="wrap">
+                                {availableForumTags.map((tag) => (
+                                    <Badge 
+                                        key={tag.id}
+                                        colorPalette={selectedForumTags.includes(tag.id) ? 'blue' : 'gray'}
+                                        cursor="pointer"
+                                        onClick={() => {
+                                            if (selectedForumTags.includes(tag.id)) {
+                                                // 移除標籤
+                                                setSelectedForumTags(prev => prev.filter(id => id !== tag.id));
+                                            } else {
+                                                // 添加標籤（最多5個）
+                                                if (selectedForumTags.length < 5) {
+                                                    setSelectedForumTags(prev => [...prev, tag.id]);
+                                                } else {
+                                                    toaster.create({
+                                                        title: '最多只能選擇 5 個標籤',
+                                                        type: 'warning',
+                                                        duration: 2000,
+                                                    });
+                                                }
+                                            }
+                                        }}
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={1}
+                                        px={3}
+                                        py={1}
+                                        fontSize="sm"
+                                        borderWidth={selectedForumTags.includes(tag.id) ? '2px' : '1px'}
+                                        borderColor={selectedForumTags.includes(tag.id) ? 'blue.500' : 'border.emphasized'}
+                                        _hover={{ 
+                                            bg: selectedForumTags.includes(tag.id) ? 'blue.100' : 'gray.100',
+                                            transform: 'scale(1.05)',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {tag.emoji && tag.emoji.name && `${tag.emoji.name} `}
+                                        {tag.name}
+                                    </Badge>
+                                ))}
+                            </Flex>
+                        </ChakraField.Root>
+                    )}
 
                     <Button
                         type="submit"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -18,6 +18,9 @@ import {
 import { LuTrendingUp, LuTrendingDown, LuTrash2, LuCog } from 'react-icons/lu';
 import { toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const MotionBox = motion(Box)
 
 interface SignalRecord {
   id: string;
@@ -44,6 +47,18 @@ interface SignalHistoryProps {
 
 export default function SignalHistory({ records, onDelete, sortOrder = 'desc' }: SignalHistoryProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // 點擊其他地方時關閉選單
+  useEffect(() => {
+    if (!deleteId) return;
+    const handleClick = (e: MouseEvent) => {
+      const menu = document.querySelector(`[data-delete-menu-id='${deleteId}']`);
+      if (menu && menu.contains(e.target as Node)) return;
+      setDeleteId(null);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [deleteId]);
   const router = useRouter();
 
   // 排序
@@ -179,12 +194,12 @@ export default function SignalHistory({ records, onDelete, sortOrder = 'desc' }:
                 cursor="pointer"
               >
                 <HStack justifyContent="space-between" mb={2} position="relative">
-                  <HStack gap={4} alignItems="center">
+                  <HStack minHeight="40px" gap={3} alignItems="center">
                     <Image
                       src={`https://cdn.jsdelivr.net/gh/StarWindTW/Binance-Icons/icons/${record.coinSymbol.toUpperCase()}.png`}
                       alt={record.coinSymbol}
-                      width="28px"
-                      height="28px"
+                      width="32px"
+                      height="32px"
                       borderRadius="full"
                       onError={(e) => {
                         const img = e.currentTarget;
@@ -207,18 +222,94 @@ export default function SignalHistory({ records, onDelete, sortOrder = 'desc' }:
                     />
                     <Text fontWeight="bold">{record.coinSymbol}</Text>
                   </HStack>
-                  <IconButton
-                    right={0}
-                    variant="ghost"
-                    rounded="full"
-                    colorPalette="red"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteId(record.id);
-                    }}
-                  >
-                    <LuTrash2 />
-                  </IconButton>
+                  <Box position="absolute" right={0} top={0}>
+                    <MotionBox
+                      data-delete-menu-id={record.id}
+                      layout
+                      initial={{ height: 40, width: 40, borderRadius: "50%" }}
+                      animate={deleteId === record.id
+                        ? { width: 200, height: 172, borderRadius: "24px" }
+                        : { width: 40, height: 40, borderRadius: "50%" }
+                      }
+                      transition={{ type: "spring", stiffness: 350, damping: 26 }}
+                      position="relative"
+                      bg={deleteId === record.id ? "dcms.panel" : "transparent"}
+                      borderColor={deleteId === record.id ? "border.emphasized" : "transparent"}
+                      overflow="hidden"
+                      borderWidth="1px"
+                      shadow={deleteId === record.id ? "4px 4px 14px rgba(0, 0, 0, 0.2)" : "none"}
+                    >
+                      <AnimatePresence initial={false}>
+                        {deleteId === record.id && (
+                          <motion.div
+                            layout
+                            key="confirm-delete"
+                            initial={{ filter: "blur(15px)" }}
+                            animate={{ filter: "blur(0px)" }}
+                            exit={{ filter: "blur(15px)" }}
+                            transition={{ duration: 0.2, delay: 0.1 }}
+                            style={{ width: "100%" }}
+                          >
+                            <VStack py={2} alignItems="stretch" gap={2}>
+                              <motion.div layout>
+                                <Box py={3} mx={3} textAlign="center">
+                                  {/* <Heading size="lg">確定刪除</Heading> */}
+                                  <Text>確定要刪除這筆紀錄嗎？此操作無法復原。</Text>
+                                </Box>
+                                <VStack alignItems="stretch" gap={1} mx={2}>
+                                  <Button
+                                    variant="subtle"
+                                    colorPalette="red"
+                                    rounded="2xl"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onDelete) onDelete(record.id);
+                                      setDeleteId(null);
+                                    }}
+                                  >
+                                    刪除
+                                  </Button>
+                                  <Button
+                                    variant="subtle"
+                                    rounded="2xl"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeleteId(null);
+                                    }}
+                                  >
+                                    取消
+                                  </Button>
+                                </VStack>
+                              </motion.div>
+                            </VStack>
+                          </motion.div>
+                        )}
+                        {deleteId !== record.id && (
+                          <motion.div
+                            layout
+                            key="delete-button"
+                            initial={{ opacity: 1, filter: "blur(8px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, filter: "blur(8px)" }}
+                            transition={{ duration: 0.1 }}
+                            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <IconButton
+                              variant="ghost"
+                              rounded="full"
+                              colorPalette="red"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteId(record.id);
+                              }}
+                            >
+                              <LuTrash2 />
+                            </IconButton>
+                          </motion.div>)
+                        }
+                      </AnimatePresence>
+                    </MotionBox>
+                  </Box>
                 </HStack>
                 <Badge size="md" rounded="lg" mt={3} py={1} colorPalette={record.positionType === 'long' ? 'green' : 'red'}>
                   {record.positionType === 'long' ? '做多' : '做空'}
@@ -251,7 +342,7 @@ export default function SignalHistory({ records, onDelete, sortOrder = 'desc' }:
         </>
       )}
 
-      <Dialog.Root open={!!deleteId} onOpenChange={(e) => !e.open && setDeleteId(null)}>
+      {/* <Dialog.Root open={!!deleteId} onOpenChange={(e) => !e.open && setDeleteId(null)}>
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
@@ -278,7 +369,7 @@ export default function SignalHistory({ records, onDelete, sortOrder = 'desc' }:
             <Dialog.CloseTrigger />
           </Dialog.Content>
         </Dialog.Positioner>
-      </Dialog.Root>
+      </Dialog.Root> */}
     </Box>
   );
 }

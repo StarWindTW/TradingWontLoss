@@ -126,7 +126,7 @@ export default function HistoryPage() {
 
     return (
         <Box ml="240px" flex={1} overflowY="auto" p={6} height="calc(100vh - 65px)" overflow="auto" bg="dcms.bg">
-            <Heading size="lg" mb={6}>歷史紀錄</Heading>
+            <Heading size="2xl" mb={6}>歷史紀錄</Heading>
             <Box mb={4}>
                 <Button variant="outline" bg="dcms.panel" borderColor="border.emphasized" _hover={{ bg: "dcms.btnHover" }} rounded="2xl" onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}>
                     時間:
