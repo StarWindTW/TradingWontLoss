@@ -78,116 +78,115 @@ export default function SignalManagePage({ params }: { params: { id: string } })
     const [isUpdatingTags, setIsUpdatingTags] = useState(false);
 
     // 更新 Discord 消息
-    const updateDiscordMessage = async (updatedSignal?: SignalDetail) => {
-        const signalData = updatedSignal || signal;
-        if (!signalData || !signalData.threadId) {
-            console.log('No thread ID, skipping Discord update');
-            return;
-        }
+    // const updateDiscordMessage = async (updatedSignal?: SignalDetail) => {
+    //     const signalData = updatedSignal || signal;
+    //     if (!signalData || !signalData.threadId) {
+    //         console.log('No thread ID, skipping Discord update');
+    //         return;
+    //     }
 
-        try {
-            const positionTypeText = signalData.positionType === 'long' ? '做多 LONG' : '做空 SHORT';
-            const embedColor = signalData.positionType === 'long' ? 0x00FF00 : 0xFF0000;
-            const coinIcon = `https://cdn.jsdelivr.net/gh/StarWindTW/Binance-Icons/icons/${signalData.coinSymbol.toUpperCase()}.png`;
-            const userAvatar = session?.user?.image || '';
+    //     try {
+    //         const positionTypeText = signalData.positionType === 'long' ? '做多 LONG' : '做空 SHORT';
+    //         const embedColor = signalData.positionType === 'long' ? 0x00FF00 : 0xFF0000;
+    //         const coinIcon = `https://cdn.jsdelivr.net/gh/StarWindTW/Binance-Icons/icons/${signalData.coinSymbol.toUpperCase()}.png`;
+    //         const userAvatar = session?.user?.image || '';
 
-            // 計算盈虧比
-            let riskRewardRatio = '';
-            if (signalData.entryPrice && signalData.takeProfit && signalData.stopLoss) {
-                const entryPrice = parseFloat(signalData.entryPrice);
-                const takeProfitPrice = parseFloat(signalData.takeProfit);
-                const stopLossPrice = parseFloat(signalData.stopLoss);
-                const profit = Math.abs(takeProfitPrice - entryPrice);
-                const loss = Math.abs(entryPrice - stopLossPrice);
-                riskRewardRatio = (profit / loss).toFixed(2);
-            }
+    //         // 計算盈虧比
+    //         let riskRewardRatio = '';
+    //         if (signalData.entryPrice && signalData.takeProfit && signalData.stopLoss) {
+    //             const entryPrice = parseFloat(signalData.entryPrice);
+    //             const takeProfitPrice = parseFloat(signalData.takeProfit);
+    //             const stopLossPrice = parseFloat(signalData.stopLoss);
+    //             const profit = Math.abs(takeProfitPrice - entryPrice);
+    //             const loss = Math.abs(entryPrice - stopLossPrice);
+    //             riskRewardRatio = (profit / loss).toFixed(2);
+    //         }
 
-            const embed = {
-                author: {
-                    name: `${signalData.coinSymbol}-${positionTypeText}`,
-                    icon_url: coinIcon,
-                },
-                title: `交易信號`,
-                color: embedColor,
-                fields: [
-                    {
-                        name: '💎 幣種',
-                        value: `\`${signalData.coinName}\``,
-                        inline: false
-                    },
-                    {
-                        name: '📍 開倉價格',
-                        value: `\`${signalData.entryPrice || '未設定'}\``,
-                        inline: true
-                    },
-                    {
-                        name: '🎯 止盈目標',
-                        value: `\`${signalData.takeProfit || '未設定'}\``,
-                        inline: true
-                    },
-                    {
-                        name: '🛡️ 止損價格',
-                        value: `\`${signalData.stopLoss || '未設定'}\``,
-                        inline: true
-                    }
-                ],
-                footer: {
-                    text: `${signalData.sender}`,
-                    icon_url: userAvatar,
-                },
-                timestamp: new Date(signalData.timestamp).toISOString()
-            };
+    //         const embed = {
+    //             author: {
+    //                 name: `${signalData.coinSymbol}-${positionTypeText}`,
+    //                 icon_url: coinIcon,
+    //             },
+    //             title: `交易信號`,
+    //             color: embedColor,
+    //             fields: [
+    //                 {
+    //                     name: '💎 幣種',
+    //                     value: `\`${signalData.coinName}\``,
+    //                     inline: false
+    //                 },
+    //                 {
+    //                     name: '📍 開倉價格',
+    //                     value: `\`${signalData.entryPrice || '未設定'}\``,
+    //                     inline: true
+    //                 },
+    //                 {
+    //                     name: '🎯 止盈目標',
+    //                     value: `\`${signalData.takeProfit || '未設定'}\``,
+    //                     inline: true
+    //                 },
+    //                 {
+    //                     name: '🛡️ 止損價格',
+    //                     value: `\`${signalData.stopLoss || '未設定'}\``,
+    //                     inline: true
+    //                 }
+    //             ],
+    //             footer: {
+    //                 text: `${signalData.sender}`,
+    //                 icon_url: userAvatar,
+    //             },
+    //             timestamp: new Date(signalData.timestamp).toISOString()
+    //         };
 
-            // 添加開倉原因
-            if (signalData.reason) {
-                embed.fields.push({
-                    name: '📝 開倉原因',
-                    value: signalData.reason,
-                    inline: false
-                });
-            }
+    //         // 添加開倉原因
+    //         if (signalData.reason) {
+    //             embed.fields.push({
+    //                 name: '📝 開倉原因',
+    //                 value: signalData.reason,
+    //                 inline: false
+    //             });
+    //         }
 
-            // 添加盈虧比
-            if (riskRewardRatio) {
-                embed.fields.push({
-                    name: '📊 盈虧比',
-                    value: `\`${riskRewardRatio}:1\``,
-                    inline: true
-                });
-            }
+    //         // 添加盈虧比
+    //         if (riskRewardRatio) {
+    //             embed.fields.push({
+    //                 name: '📊 盈虧比',
+    //                 value: `\`${riskRewardRatio}:1\``,
+    //                 inline: true
+    //             });
+    //         }
 
-            // 調用 Bot API 更新消息（不更新標籤，標籤由用戶單獨管理）
-            console.log('📤 Sending to Discord Bot:', {
-                threadId: signalData.threadId
-            });
+    //         // 調用 Bot API 更新消息（不更新標籤，標籤由用戶單獨管理）
+    //         console.log('📤 Sending to Discord Bot:', {
+    //             threadId: signalData.threadId
+    //         });
 
-            const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
+    //         const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
             
-            const response = await axios.patch(
-                `${botAPiUrl}/api/update-thread-message/${signalData.threadId}`,
-                { 
-                    embed
-                    // 不傳 appliedTags，保持標籤不變
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${session?.accessToken}`,
-                    }
-                }
-            );
+    //         const response = await axios.patch(
+    //             `${botAPiUrl}/api/update-thread-message/${signalData.threadId}`,
+    //             { 
+    //                 embed
+    //                 // 不傳 appliedTags，保持標籤不變
+    //             },
+    //             {
+    //                 headers: {
+    //                     'Authorization': `Bearer ${session?.accessToken}`,
+    //                 }
+    //             }
+    //         );
 
-            console.log('✅ Discord message updated successfully:', response.data);
-        } catch (error) {
-            console.error('Failed to update Discord message:', error);
-            // 不顯示錯誤提示，因為這是次要功能
-        }
-    };
+    //         console.log('✅ Discord message updated successfully:', response.data);
+    //     } catch (error) {
+    //         console.error('Failed to update Discord message:', error);
+    //         // 不顯示錯誤提示，因為這是次要功能
+    //     }
+    // };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await fetch(`/api/signals/${params.id}`);
-                const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
                 if (!res.ok) {
                     if (res.status === 403) {
                         toaster.create({ title: '無權限訪問', type: 'error' });
@@ -208,11 +207,9 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                 if (data.signal.threadId && session?.accessToken) {
                     try {
                         const tagsResponse = await axios.get(
-                            `${botAPiUrl}/api/threads/${data.signal.threadId}/tags`,
+                            `/api/discord/thread/${data.signal.threadId}`,
                             {
-                                headers: {
-                                    Authorization: `Bearer ${session.accessToken}`
-                                }
+                                method: "GET",
                             }
                         );
                         setSelectedForumTags(tagsResponse.data.appliedTags || []);
@@ -247,13 +244,10 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             }
 
             try {
-                const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
                 const response = await axios.get(
-                    `${botAPiUrl}/api/channels/${signal.channelId}/tags`,
+                    `/api/discord/channels/${signal.channelId}`,
                     {
-                        headers: {
-                            Authorization: `Bearer ${session.accessToken}`
-                        }
+                        method: "GET",
                     }
                 );
                 setAvailableForumTags(response.data);
@@ -287,7 +281,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             setLogs(data.logs);
 
             // 同步更新 Discord 消息
-            await updateDiscordMessage(data.signal);
+            // await updateDiscordMessage(data.signal);
             
         } catch (error) {
             console.error(error);
@@ -333,20 +327,17 @@ export default function SignalManagePage({ params }: { params: { id: string } })
         setIsUpdatingTags(true);
         
         try {
-            const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
 
             console.log('🏷️ Updating Discord tags:', newSelectedTags);
             
             // 立即更新 Discord
             const response = await axios.patch(
-                `${botAPiUrl}/api/update-thread-message/${signal.threadId}`,
+                `/api/discord/message/${signal.threadId}`,
                 { 
                     appliedTags: newSelectedTags
                 },
                 {
-                    headers: {
-                        'Authorization': `Bearer ${session?.accessToken}`,
-                    }
+                    method: 'PATCH',
                 }
             );
 
@@ -398,7 +389,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                 <HStack justify="space-between" flexWrap="wrap" gap={4}>
                     <Heading size="xl">管理信號: {signal.coinSymbol}</Heading>
                     <HStack gap={2}>
-                        {signal.threadId && (
+                        {/* {signal.threadId && (
                             <Button 
                                 variant="outline" 
                                 colorPalette="blue"
@@ -417,7 +408,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                             >
                                 <LuRefreshCw /> 同步到 Discord
                             </Button>
-                        )}
+                        )} */}
                         <Badge colorPalette={signal.positionType === 'long' ? 'green' : 'red'} size="lg">
                             {signal.positionType === 'long' ? '做多' : '做空'}
                         </Badge>
