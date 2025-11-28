@@ -160,9 +160,11 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             console.log('📤 Sending to Discord Bot:', {
                 threadId: signalData.threadId
             });
+
+            const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
             
             const response = await axios.patch(
-                `http://localhost:3001/api/update-thread-message/${signalData.threadId}`,
+                `${botAPiUrl}/api/update-thread-message/${signalData.threadId}`,
                 { 
                     embed
                     // 不傳 appliedTags，保持標籤不變
@@ -185,6 +187,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
         const fetchData = async () => {
             try {
                 const res = await fetch(`/api/signals/${params.id}`);
+                const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
                 if (!res.ok) {
                     if (res.status === 403) {
                         toaster.create({ title: '無權限訪問', type: 'error' });
@@ -205,7 +208,7 @@ export default function SignalManagePage({ params }: { params: { id: string } })
                 if (data.signal.threadId && session?.accessToken) {
                     try {
                         const tagsResponse = await axios.get(
-                            `http://localhost:3001/api/threads/${data.signal.threadId}/tags`,
+                            `${botAPiUrl}/api/threads/${data.signal.threadId}/tags`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${session.accessToken}`
@@ -244,8 +247,9 @@ export default function SignalManagePage({ params }: { params: { id: string } })
             }
 
             try {
+                const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
                 const response = await axios.get(
-                    `http://localhost:3001/api/channels/${signal.channelId}/tags`,
+                    `${botAPiUrl}/api/channels/${signal.channelId}/tags`,
                     {
                         headers: {
                             Authorization: `Bearer ${session.accessToken}`
@@ -329,11 +333,13 @@ export default function SignalManagePage({ params }: { params: { id: string } })
         setIsUpdatingTags(true);
         
         try {
+            const botAPiUrl = process.env.NEXT_PUBLIC_BOT_API_URL;
+
             console.log('🏷️ Updating Discord tags:', newSelectedTags);
             
             // 立即更新 Discord
             const response = await axios.patch(
-                `http://localhost:3001/api/update-thread-message/${signal.threadId}`,
+                `${botAPiUrl}/api/update-thread-message/${signal.threadId}`,
                 { 
                     appliedTags: newSelectedTags
                 },
